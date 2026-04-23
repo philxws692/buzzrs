@@ -7,15 +7,27 @@ use crate::core::{NotificationFactory, NotificationService};
 use anyhow::{Context, Result, anyhow};
 
 #[derive(Deserialize, Debug)]
+/// Query-backed configuration for `gotify://` URLs.
+///
+/// Docs:
+/// - Push messages: <https://gotify.net/docs/pushmsg>
 pub struct GotifyConfig {
+    /// Use plain HTTP instead of HTTPS (internal transport toggle).
     #[serde(default)]
     disable_tls: bool,
+    /// Message priority sent to Gotify.
+    ///
+    /// Docs: <https://gotify.net/docs/pushmsg>
     #[serde(default)]
     priority: u8,
+    /// Message title sent to Gotify.
+    ///
+    /// Docs: <https://gotify.net/docs/pushmsg>
     #[serde(default)]
     title: String,
 }
 
+/// Sends notifications to Gotify `/message`.
 pub struct GotifyService {
     domain: String,
     token: String,
@@ -66,6 +78,7 @@ impl NotificationFactory for GotifyFactory {
     }
 
     fn build(&self, url: &url::Url) -> Result<Box<dyn NotificationService>> {
+        // URL format: gotify://<host>[:port]/<app-token>?title=...&priority=...
         let token = url
             .path_segments()
             .and_then(|segments| segments.filter(|segment| !segment.is_empty()).next_back())

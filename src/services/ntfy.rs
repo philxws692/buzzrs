@@ -7,32 +7,67 @@ use serde_json::json;
 use crate::core::{NotificationFactory, NotificationService};
 
 #[derive(Deserialize, Debug)]
+/// Query-backed configuration for `ntfy://` URLs.
+///
+/// Docs:
+/// - Sending messages: <https://docs.ntfy.sh/publish/>
 pub struct NtfyConfig {
-    /// The url of a notification attachment [more info](https://docs.ntfy.sh/publish/#attach-file-from-a-url)
+    /// Attachment URL.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#attach-file-from-a-url>
     #[serde(default)]
     attach: String,
+    /// Toggle server-side message caching.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#message-caching>
     #[serde(default = "default_cache")]
     cache: bool,
+    /// URL opened when notification is clicked.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#click-action>
     #[serde(default)]
     click: String,
+    /// Scheduled delivery value (`delay`, `in`, or `at`).
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#scheduled-delivery>
     #[serde(default, alias = "in", alias = "at")]
     delay: String,
+    /// E-mail recipient for notification forwarding.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#e-mail-notifications>
     #[serde(default)]
     email: String,
+    /// Notification icon URL.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#icons>
     #[serde(default)]
     icon: String,
+    /// Attachment filename override.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#attachments>
     #[serde(default)]
     filename: String,
+    /// Notification priority (`1..=5`).
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#message-priority>
     #[serde(default)]
     priority: u8,
+    /// Use plain HTTP instead of HTTPS (internal transport toggle).
     #[serde(default)]
     disable_tls: bool,
+    /// Notification tags.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#tags-emojis>
     #[serde(default, deserialize_with = "deserialize_tags")]
     tags: Vec<String>,
+    /// Notification title.
+    ///
+    /// Docs: <https://docs.ntfy.sh/publish/#message-title>
     #[serde(default)]
     title: String,
 }
 
+/// Sends notifications to ntfy publish endpoint.
 pub struct NtfyService {
     domain: String,
     token: String,
@@ -44,6 +79,7 @@ fn default_cache() -> bool {
     true
 }
 
+/// Supports `tags=a,b` in URL query and normalizes to `Vec<String>`.
 fn deserialize_tags<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
 where
     D: Deserializer<'de>,
@@ -130,6 +166,7 @@ impl NotificationFactory for NtfyFactory {
     }
 
     fn build(&self, url: &url::Url) -> Result<Box<dyn NotificationService>> {
+        // URL format: ntfy://<host>[:port]/<token>/<topic>?title=...&priority=...
         let segments: Vec<_> = url
             .path_segments()
             .map(|segments| segments.filter(|segment| !segment.is_empty()).collect())
