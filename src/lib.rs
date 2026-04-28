@@ -5,7 +5,7 @@ use crate::core::{NotificationFactory, NotificationService};
 
 pub(crate) mod core;
 
-pub mod services;
+mod services;
 
 pub struct Buzz {
     factories: Vec<Box<dyn NotificationFactory>>,
@@ -37,4 +37,20 @@ impl Default for Buzz {
     fn default() -> Self {
         Self::new()
     }
+}
+
+#[macro_export]
+macro_rules! buzz {
+    ($url:expr, $msg:expr) => {{
+        let buzz = $crate::Buzz::new();
+
+        match buzz.build_service($url) {
+            Ok(service) => {
+                if let Err(e) = service.send($msg).await {
+                    eprintln!("Error sending notification. {}", e)
+                }
+            }
+            Err(e) => eprintln!("error upon creation of service: {}", e),
+        }
+    }};
 }
