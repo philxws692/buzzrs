@@ -17,6 +17,7 @@ impl Buzz {
             factories: vec![
                 Box::new(services::gotify::GotifyFactory),
                 Box::new(services::ntfy::NtfyFactory),
+                Box::new(services::discord::DiscordFactory),
             ],
         }
     }
