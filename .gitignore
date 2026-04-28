@@ -23,4 +23,5 @@ target
 
 .env
 src/main.rs
-.env
+
+.DS_Store
