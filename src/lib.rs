@@ -54,6 +54,7 @@ pub async fn __buzz_async(url: &str, msg: &str) {
     }
 }
 
+#[cfg(feature = "no_async")]
 #[doc(hidden)]
 pub fn __buzz_sync(url: &str, msg: &str) {
     match tokio::runtime::Runtime::new() {
@@ -67,6 +68,7 @@ macro_rules! buzz {
     ($url:expr, $msg:expr) => {{ $crate::__buzz_async($url, $msg).await }};
 }
 
+#[cfg(feature = "no_async")]
 #[macro_export]
 macro_rules! buzz_sync {
     ($url:expr, $msg:expr) => {{ $crate::__buzz_sync($url, $msg) }};
