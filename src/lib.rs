@@ -40,18 +40,34 @@ impl Default for Buzz {
     }
 }
 
+#[doc(hidden)]
+pub async fn __buzz_async(url: &str, msg: &str) {
+    let buzz = Buzz::new();
+
+    match buzz.build_service(url) {
+        Ok(service) => {
+            if let Err(e) = service.send(msg).await {
+                eprintln!("Error sending notification. {}", e)
+            }
+        }
+        Err(e) => eprintln!("error upon creation of service: {}", e),
+    }
+}
+
+#[doc(hidden)]
+pub fn __buzz_sync(url: &str, msg: &str) {
+    match tokio::runtime::Runtime::new() {
+        Ok(runtime) => runtime.block_on(__buzz_async(url, msg)),
+        Err(e) => eprintln!("error creating tokio runtime: {}", e),
+    }
+}
+
 #[macro_export]
 macro_rules! buzz {
-    ($url:expr, $msg:expr) => {{
-        let buzz = $crate::Buzz::new();
+    ($url:expr, $msg:expr) => {{ $crate::__buzz_async($url, $msg).await }};
+}
 
-        match buzz.build_service($url) {
-            Ok(service) => {
-                if let Err(e) = service.send($msg).await {
-                    eprintln!("Error sending notification. {}", e)
-                }
-            }
-            Err(e) => eprintln!("error upon creation of service: {}", e),
-        }
-    }};
+#[macro_export]
+macro_rules! buzz_sync {
+    ($url:expr, $msg:expr) => {{ $crate::__buzz_sync($url, $msg) }};
 }
