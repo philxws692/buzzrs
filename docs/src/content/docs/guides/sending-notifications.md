@@ -14,4 +14,4 @@ async fn main() {
 }
 ```
 
-For services see [Services](/services/overview)
+For services see [Services](/services/overview/)
